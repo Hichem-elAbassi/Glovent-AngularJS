@@ -1,0 +1,123 @@
+<!doctype html>
+<html ng-app="mymodal">
+
+
+<body>
+
+<div ng-controller="MainCtrl as main" class="container">
+  <button ng-click="main.toggleModal('Success')" class="btn btn-default">Success</button>
+  <button ng-click="main.toggleModal('Remove')" class="btn btn-default">Remove</button>
+  <button ng-click="main.toggleModal('Deny')" class="btn btn-default">Deny</button>
+  <button ng-click="main.toggleModal('Cancel')" class="btn btn-default">Cancel</button>
+  {{main.controllerVisible}} {{main.controllerTitle}}
+  <modal modal-visible="main.controllerVisible" modal-title="main.controllerTitle">
+      Any additional data / buttons
+  </modal>
+</div>
+<link rel="stylesheet" href="lib/bootstrap-3.3.6-dist/css/bootstrap.min.css">
+    <!-- Scripts -->
+    <script src="lib/jquery-2.0.3/jquery.min.js"></script>
+    <script src="lib/bootstrap-3.3.6-dist/js/bootstrap.min.js"></script>
+    <script src="lib/angular-1.2.20/angular.js"></script>
+    <!-- App -->
+    <script>
+        var mymodal = angular.module('mymodal', []);
+
+mymodal.controller('MainCtrl', function ($scope) {
+    var vm=this;
+    vm.controllerVisible = false;
+    vm.controllerTitle = "";
+    vm.count=0;
+    vm.toggleModal = function(btnClickedTitle){
+        vm.controllerTitle = btnClickedTitle;
+        vm.controllerVisible = !vm.controllerVisible;
+    };
+    vm.automaticToggle=function(){
+      //alert(vm.controllerVisible);
+      $scope.$apply(function(){
+        vm.controllerVisible=!vm.controllerVisible;
+        if(vm.controllerVisible)
+          ++vm.count;
+        vm.controllerTitle="this is automatic show N "+vm.count;
+        console.log('this is from toggle fn : ',vm.controllerVisible);
+      });
+      setTimeout(vm.automaticToggle,3000);
+    }
+    setTimeout(vm.automaticToggle,3000);
+  });
+mymodal.directive('myButton', function() {
+    return {
+        restrict: 'E',
+        replace:true,
+        template:'<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>',
+        link : function (scope, element, attrs) {
+        }
+    }
+});
+mymodal.directive('myHeader', function() {
+    return {
+        restrict: 'E',
+        replace:true,
+        template:'<h4 class="modal-title">{{headerTitle}}</h4>',
+      scope: {
+        headerTitle: '='
+      },
+        link : function (scope, element, attrs) {
+          scope.headerTitle="testing";
+        }
+    }
+});
+mymodal.directive('modal', function () {
+    return {
+      template: '<div class="modal fade">' + 
+          '<div class="modal-dialog">' + 
+            '<div class="modal-content">' + 
+              '<div class="modal-header">' + 
+                '<my-button></my-button>' + 
+                '<my-header header-title="modalTitle"></my-header>' + 
+                // '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>'+
+                // '<h4 class="modal-title">{{modalTitle}}</h4>' + 
+              '</div>' + 
+              '<div class="modal-body">{{modalVisible}}</div>' + 
+            '</div>' + 
+          '</div>' + 
+        '</div>',
+      restrict: 'E',
+      replace:true,
+      scope: {
+        modalVisible: '=',
+        modalTitle: '='
+      },
+      link: function postLink(scope, element, attrs) {
+        var vm=this;
+        console.log(vm);
+        scope.$watch('modalVisible', function(value){
+          console.log('this is visible of directive : ',value);
+          if(value == true)
+            $(element).modal('show');
+          else
+            $(element).modal('hide');
+        });
+        scope.$watch('modalTitle', function(value){
+          console.log('this is the modalTitle from directive : ',value);
+        });
+
+        $(element).on('shown.bs.modal', function(){
+          console.log('this is the scope of directive on show modal',vm);
+          console.log('-----------------------------------------------');
+        });
+
+        $(element).on('hidden.bs.modal', function(){
+          scope.$apply(function(){
+            vm.modalVisible=false;
+          });
+          console.log('this is the scope of directive on hide modal',vm);
+          console.log('-----------------------------------------------');
+        });
+      }
+    };
+  });
+
+    </script>
+</body>
+</html>
